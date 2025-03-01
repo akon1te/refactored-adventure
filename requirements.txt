@@ -1,0 +1,7 @@
+torch>=1.12.0
+torchvision
+diffusers
+accelerate
+gradio
+tqdm
+Pillow
