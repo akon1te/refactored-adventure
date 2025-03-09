@@ -2,9 +2,8 @@
 
 Проект для дообучения и генерации изображений в стиле "arcane" на основе пайплайна Stable Diffusion Img2Img.
 
-
-## Использованные данные
-https://www.kaggle.com/datasets/artermiloff/arcanefaces - датасет с лицами персонажей из сериала
+## Использованная модель
+https://huggingface.co/stable-diffusion-v1-5/stable-diffusion-v1-5
 
 ## Структура проекта
 
