@@ -1,15 +1,19 @@
 import os
 import torch
+import datetime
+import argparse
+
+from torch.utils.tensorboard import SummaryWriter
 from torch.utils.data import DataLoader
 from torchvision import transforms
-from PIL import Image
-from diffusers import StableDiffusionImg2ImgPipeline, DDPMScheduler
-from tqdm.auto import tqdm
-from torch.utils.tensorboard import SummaryWriter
-import datetime
-from datasets import load_dataset
 
+from diffusers import StableDiffusionImg2ImgPipeline, DDPMScheduler
+from datasets import load_dataset
 from peft import LoraConfig, get_peft_model
+
+from PIL import Image
+
+from tqdm.auto import tqdm
 
 
 preprocess = transforms.Compose([
@@ -33,28 +37,16 @@ def transform_fn(examples):
     return {"pixel_values": processed_images}
 
 
-def train_arcane_style():
+def train_arcane_style(config):
     device = "mps" if torch.backends.mps.is_available() else "cuda" if torch.cuda.is_available() else "cpu"
-    log_dir = os.path.join("logs", "arcane_finetune", datetime.datetime.now().strftime("%Y%m%d-%H%M%S"))
+    log_dir = os.path.join(config["logs_dir"], datetime.datetime.now().strftime("%Y%m%d-%H%M%S"))
     writer = SummaryWriter(log_dir)
     
-    config = {
-        "learning_rate": 1e-5,
-        "batch_size": 1,
-        "num_epochs": 5,
-        "data_dir": "./data/images",  # Directory with arcane-style images
-        "model_id": "stable-diffusion-v1-5/stable-diffusion-v1-5",
-        "prompt": "arcane style, detailed, high quality, League of Legends"
-    }
-    
-    # Load dataset via HuggingFace load_dataset("imagefolder")
     dataset = load_dataset(
         "imagefolder",
         data_dir=config["data_dir"],
         split="train"
     )
-    
-    # Set the transformation function
     dataset.set_transform(transform_fn)
     
     dataloader = DataLoader(
@@ -78,7 +70,7 @@ def train_arcane_style():
         lora_alpha=32,
         lora_dropout=0.1,
         init_lora_weights="gaussian",
-        target_modules=["to_k", "to_q", "to_v", "to_out.0"],  
+        target_modules=["to_k", "to_q", "to_v", "to_out.0"]
     )
     pipe.unet = get_peft_model(pipe.unet, lora_config)
     
@@ -148,5 +140,18 @@ def train_arcane_style():
     
     writer.close()
 
+
 if __name__ == "__main__":
-    train_arcane_style()
+    parser = argparse.ArgumentParser(description="Train arcane style model")
+    parser.add_argument("--learning_rate", type=float, default=1e-5, help="Learning rate for the optimizer")
+    parser.add_argument("--batch_size", type=int, default=1, help="Batch size for training")
+    parser.add_argument("--num_epochs", type=int, default=5, help="Number of epochs to train")
+    parser.add_argument("--data_dir", type=str, default="./data/images", help="Directory with training images")
+    parser.add_argument("--logs_dir", type=str, default="./logs/arcane_finetune", help="Directory with train logs")
+    parser.add_argument("--model_id", type=str, default="stable-diffusion-v1-5/stable-diffusion-v1-5", help="Model id to be used")
+    parser.add_argument("--prompt", type=str, default="arcane style, detailed, high quality, League of Legends", help="Prompt text")
+    args = parser.parse_args()
+    
+    config = vars(args)
+    train_arcane_style(config)
+    

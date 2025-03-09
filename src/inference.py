@@ -6,7 +6,6 @@ from PIL import Image
 def main(args):
     device = "mps" if torch.backends.mps.is_available() else "cuda" if torch.cuda.is_available() else "cpu"
     
-    # Load fine-tuned model
     pipe = StableDiffusionImg2ImgPipeline.from_pretrained(
         args.model_path,
         safety_checker=None,
@@ -14,11 +13,9 @@ def main(args):
     )
     pipe = pipe.to(device)
     
-    # Open and resize initial image
     init_image = Image.open(args.init_image).convert("RGB")
     init_image = init_image.resize((512, 512))
     
-    # Generate image from initial image with given prompt and strength
     result = pipe(
         prompt=args.prompt,
         image=init_image,
@@ -26,7 +23,6 @@ def main(args):
         num_inference_steps=args.num_inference_steps
     )
     
-    # Save the generated image
     output_image = result.images[0]
     output_image.save(args.output)
     print(f"Generated image saved to {args.output}")

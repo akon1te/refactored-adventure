@@ -1,0 +1,1 @@
+Download dataset https://www.kaggle.com/datasets/artermiloff/arcanefaces into folder for using train/infer scripts
